@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Resume Analyzer</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        input, textarea, button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .result {
+            margin-top: 20px;
+        }
+
+        .good { color: green; }
+        .bad { color: red; }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>AI Resume Analyzer</h2>
+
+    <input type="file" id="resume">
+
+    <textarea id="jobDesc" placeholder="Paste Job Description here"></textarea>
+
+    <button onclick="analyze()">Analyze</button>
+
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+async function analyze() {
+    const fileInput = document.getElementById("resume");
+    const jobDesc = document.getElementById("jobDesc").value;
+
+    if (!fileInput.files[0]) {
+        alert("Upload resume first!");
+        return;
+    }
+
+    let formData = new FormData();
+    formData.append("resume", fileInput.files[0]);
+    formData.append("jobDesc", jobDesc);
+
+    let res = await fetch("http://127.0.0.1:5001/analyze", {
+        method: "POST",
+        body: formData
+    });
+
+    let data = await res.json();
+
+    displayResult(data);
+}
+
+function displayResult(data) {
+    let html = "";
+
+    html += `<h3>Match Score: ${data.match_score}%</h3>`;
+
+    html += `<p><b>Matched Skills:</b> 
+        <span class="good">${data.matched_skills.join(", ")}</span></p>`;
+
+    html += `<p><b>Missing Skills:</b> 
+        <span class="bad">${data.missing_skills.join(", ")}</span></p>`;
+
+    html += `<p><b>Suggestions:</b><br>`;
+    data.suggestions.forEach(s => {
+        html += `• ${s}<br>`;
+    });
+    html += `</p>`;
+
+    document.getElementById("result").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
